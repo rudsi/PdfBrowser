@@ -17,7 +17,14 @@ app.get("/list-pdfs", (req, res) => {
 
   try {
     const files = fs.readdirSync(fullPath);
-    const pdfs = files.filter(f => f.toLowerCase().endsWith(".pdf"));
+    const pdfs = files.filter(f => f.toLowerCase().endsWith(".pdf")).map((file) => {
+      const filePath = path.join(fullPath, file);
+      const stats = fs.statSync(filePath);
+      return {
+        name: file,
+        modified: stats.mtimeMs,
+      };
+    });
     res.json({ pdfs });
   } catch (err) {
     res.status(404).json({ error: "Folder not found" });

@@ -4,13 +4,18 @@ import React, { useState, useMemo } from "react";
 
 const ITEMS_PER_PAGE = 10;
 
+type PdfFile = {
+  name: string;
+  modified: number;
+};
+
 export default function PdfBrowser() {
   const [relativePath, setRelativePath] = useState("");
-  const [pdfFiles, setPdfFiles] = useState<string[]>([]);
+  const [pdfFiles, setPdfFiles] = useState<PdfFile[]>([]);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortMethod, setSortMethod] = useState<"newest" | "oldest">("newest");
 
   const fetchPdfFiles = async () => {
     setError("");
@@ -35,16 +40,16 @@ export default function PdfBrowser() {
 
     if (searchQuery.trim()) {
       files = files.filter((file) =>
-        file.toLowerCase().includes(searchQuery.toLowerCase())
+        file.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     files.sort((a, b) =>
-      sortOrder === "asc" ? a.localeCompare(b) : b.localeCompare(a)
+      sortMethod === "newest" ? b.modified - a.modified : a.modified - b.modified
     );
 
     return files;
-  }, [pdfFiles, searchQuery, sortOrder]);
+  }, [pdfFiles, searchQuery, sortMethod]);
 
   const startIndex = (page - 1) * ITEMS_PER_PAGE;
   const paginatedFiles = filteredFiles.slice(startIndex, startIndex + ITEMS_PER_PAGE);
@@ -85,12 +90,14 @@ export default function PdfBrowser() {
           />
 
           <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+            value={sortMethod}
+            onChange={(e) =>
+              setSortMethod(e.target.value as "newest" | "oldest")
+            }
             className="border border-gray-300 rounded px-3 py-2"
           >
-            <option value="asc">Sort: A → Z</option>
-            <option value="desc">Sort: Z → A</option>
+            <option value="newest">Sort: Latest → Oldest</option>
+            <option value="oldest">Sort: Oldest → Latest</option>
           </select>
         </div>
       )}
@@ -103,10 +110,10 @@ export default function PdfBrowser() {
             key={idx}
             className="flex justify-between items-center bg-white shadow-sm border border-gray-200 p-3 rounded"
           >
-            <span className="truncate">{file}</span>
+            <span className="truncate">{file.name}</span>
             <a
               href={`http://localhost:5000/files?path=${encodeURIComponent(
-                `${relativePath}/${file}`
+                `${relativePath}/${file.name}`
               )}`}
               target="_blank"
               rel="noopener noreferrer"

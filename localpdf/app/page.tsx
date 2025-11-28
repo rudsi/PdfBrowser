@@ -5,8 +5,7 @@ import PdfBrowser from "./components/PdfBrowser";
 export default function Home() {
   return (
     <div>
-      <PdfBrowser/>
-        
+      <PdfBrowser/> 
     </div>
   );
 }
